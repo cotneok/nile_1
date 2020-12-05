@@ -11,6 +11,7 @@
 # a separate helper file that requires the additional dependencies and performs
 # the additional setup, and require it from the spec files that actually need
 # it.
+require 'request_helper'
 require 'simplecov'
 SimpleCov.start
 
@@ -95,4 +96,5 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 =end
+  config.include RequestHelper, type: :request
 end

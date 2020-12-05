@@ -1,16 +1,33 @@
 require 'rails_helper'
 
 describe 'Books API', type: :request do
+  let(:first_author) {FactoryBot.create(:author, first_name: "JRR", last_name: "Tolkien", age: 46)}
+  let(:second_author) {FactoryBot.create(:author, first_name: "Stibena", last_name: "Stibenovna", age: 78)}
+
   describe 'GET /books' do
     before do
-      FactoryBot.create(:book, title: "LOTD", author: "JRR Tolkien")
-      FactoryBot.create(:book, title: "YEHA", author: "Stibena Stibenovna")
+      FactoryBot.create(:book, title: "LOTD", author: first_author)
+      FactoryBot.create(:book, title: "YEHA", author: second_author)
     end
 
     it 'returns all books' do
       get '/api/v1/books'
       expect(response).to have_http_status(:success)
-      expect(JSON.parse(response.body).size).to eq(2)
+      expect(response_body.size).to eq(2)
+      expect(response_body).to eq([
+                                                {
+                                                  'id' => 1,
+                                                  'title' => 'LOTD',
+                                                  'author_name' => 'JRR Tolkien',
+                                                  'author_age' => 46
+                                                },
+                                                {
+                                                  'id' => 2,
+                                                  'title' => 'YEHA',
+                                                  'author_name' => 'Stibena Stibenovna',
+                                                  'author_age' => 78
+                                                }
+                                              ])
     end
   end
 
@@ -24,16 +41,24 @@ describe 'Books API', type: :request do
       }.to change {Book.count}.from(0).to(1)
       expect(response).to have_http_status(:created)
       expect(Author.count).to eq(1)
+      expect(response_body).to eq(
+                                             {
+                                               'id' => 1,
+                                               'title' => 'The Martian',
+                                               'author_name' => 'Andy Weir',
+                                               'author_age' => 55
+                                             }
+                                           )
     end
 
-    it 'could not create a new book' do
-      post '/api/v1/books', params: {book: {title: "The Martian"}}
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
+    # it 'could not create a new book' do
+    #   post '/api/v1/books', params: {book: {title: "The Martian", author: first_author}}
+    #   expect(response).to have_http_status(:unprocessable_entity)
+    # end
   end
 
   describe 'DELETE /books/id' do
-    let!(:book) {FactoryBot.create(:book, title: "Ashmalaxa", author: "JRR Ashmalaxovna")}
+    let!(:book) {FactoryBot.create(:book, title: "Ashmalaxa", author: first_author)}
 
     it 'successfully deletes a book' do
       expect{delete "/api/v1/books/#{book.id}"}.to change{Book.count}.from(1).to(0)
